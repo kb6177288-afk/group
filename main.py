@@ -829,118 +829,213 @@ async def txt_handler(bot: Client, m: Message):
                 ccm = f'[🎵]Audio Id : {str(count).zfill(3)}\n**Audio Title :** `{name1} .mp3`\n<blockquote><b>Batch Name :</b> {b_name}</blockquote>\n\n**Extracted by➤**{CR}\n'
                 cchtml = f'[🌐]Html Id : {str(count).zfill(3)}\n**Html Title :** `{name1} .html`\n<blockquote><b>Batch Name :</b> {b_name}</blockquote>\n\n**Extracted by➤**{CR}\n'
                   
-if "drive" in url:
+if "drive" in url2:
     try:
-        ka = await helper.download(url, name)
+        ka = await helper.download(url2, name)
 
         copy = await bot.send_document(
             chat_id=channel_id,
-            document=ka,
+            document=ka,   # agar ka path hai to ye ok
             caption=cc1,
-            message_thread_id=TOPIC_ID if TOPIC_ID else None
+            **extra
         )
 
         count += 1
-        os.remove(ka)
+        try:
+            os.remove(ka)
+        except:
+            pass
 
     except FloodWait as e:
         await m.reply_text(str(e))
-        time.sleep(e.x)
+        await asyncio.sleep(e.x)
         continue
 
-  
-                elif ".pdf" in url:
-    if "cwmediabkt99" in url:
+# ---------------- PDF ----------------
+elif url_low.endswith(".pdf"):
+    if "cwmediabkt99" in url2:
         max_retries = 3
         retry_delay = 4
-        success = False
         failure_msgs = []
 
         for attempt in range(max_retries):
             try:
                 await asyncio.sleep(retry_delay)
-                url = url.replace(" ", "%20")
+                safe_url = url2.replace(" ", "%20")
+
                 scraper = cloudscraper.create_scraper()
-                response = scraper.get(url)
+                response = scraper.get(safe_url, timeout=40)
 
-                if response.status_code == 200:
-                    with open(f'{name}.pdf', 'wb') as file:
+                if response.status_code == 200 and response.content:
+                    pdf_path = f"{name}.pdf"
+                    with open(pdf_path, "wb") as file:
                         file.write(response.content)
-
-                    await asyncio.sleep(retry_delay)
 
                     copy = await bot.send_document(
                         chat_id=channel_id,
-                        document=f'{name}.pdf',
+                        document=pdf_path,
                         caption=cc1,
-                        message_thread_id=TOPIC_ID  # ✅ ADD
+                        **extra
                     )
 
                     count += 1
-                    os.remove(f'{name}.pdf')
-                    success = True
+                    try:
+                        os.remove(pdf_path)
+                    except:
+                        pass
                     break
                 else:
                     failure_msg = await m.reply_text(
-                        f"Attempt {attempt + 1}/{max_retries} failed: {response.status_code} {response.reason}"
+                        f"Attempt {attempt+1}/{max_retries} failed: {response.status_code} {response.reason}"
                     )
                     failure_msgs.append(failure_msg)
 
+            except FloodWait as e:
+                await m.reply_text(str(e))
+                await asyncio.sleep(e.x)
+                continue
+
             except Exception as e:
                 failure_msg = await m.reply_text(
-                    f"Attempt {attempt + 1}/{max_retries} failed: {str(e)}"
+                    f"Attempt {attempt+1}/{max_retries} failed: {str(e)}"
                 )
                 failure_msgs.append(failure_msg)
                 await asyncio.sleep(retry_delay)
-                continue
 
+        # cleanup attempt messages
         for msg in failure_msgs:
-            await msg.delete()
+            try:
+                await msg.delete()
+            except:
+                pass
 
     else:
         try:
-            cmd = f'yt-dlp -o "{name}.pdf" "{url}"'
-            download_cmd = f"{cmd} -R 25 --fragment-retries 25"
-            os.system(download_cmd)
+            pdf_path = f"{name}.pdf"
+            cmd = [
+                "yt-dlp",
+                "-o", pdf_path,
+                url2,
+                "-R", "25",
+                "--fragment-retries", "25"
+            ]
+            subprocess.run(cmd, check=True)
 
             copy = await bot.send_document(
                 chat_id=channel_id,
-                document=f'{name}.pdf',
+                document=pdf_path,
                 caption=cc1,
-                message_thread_id=TOPIC_ID  # ✅ ADD
+                **extra
             )
 
             count += 1
-            os.remove(f'{name}.pdf')
+            try:
+                os.remove(pdf_path)
+            except:
+                pass
 
         except FloodWait as e:
             await m.reply_text(str(e))
-            time.sleep(e.x)
+            await asyncio.sleep(e.x)
             continue
 
-               elif ".ws" in url and url.endswith(".ws"):
+# ---------------- WS ----------------
+elif url_low.endswith(".ws"):
     try:
+        html_path = f"{name}.html"
         await helper.pdf_download(
-            f"{api_url}utkash-ws?url={url}&authorization={api_token}",
-            f"{name}.html"
+            f"{api_url}utkash-ws?url={url2}&authorization={api_token}",
+            html_path
         )
-        time.sleep(1)
+        await asyncio.sleep(1)
 
         await bot.send_document(
             chat_id=channel_id,
-            document=f"{name}.html",
+            document=html_path,
             caption=cchtml,
-            message_thread_id=TOPIC_ID  # ✅ topic me upload
+            **extra
         )
 
-        os.remove(f'{name}.html')
+        try:
+            os.remove(html_path)
+        except:
+            pass
+
         count += 1
 
     except FloodWait as e:
         await m.reply_text(str(e))
-        time.sleep(e.x)
+        await asyncio.sleep(e.x)
         continue
 
+# ---------------- IMAGE ----------------
+elif url_low.endswith((".jpg", ".jpeg", ".png")):
+    try:
+        ext = url_low.split(".")[-1]
+        img_path = f"{name}.{ext}"
+
+        cmd = [
+            "yt-dlp",
+            "-o", img_path,
+            url2,
+            "-R", "25",
+            "--fragment-retries", "25"
+        ]
+        subprocess.run(cmd, check=True)
+
+        copy = await bot.send_photo(
+            chat_id=channel_id,
+            photo=img_path,
+            caption=ccimg,
+            **extra
+        )
+
+        count += 1
+        try:
+            os.remove(img_path)
+        except:
+            pass
+
+    except FloodWait as e:
+        await m.reply_text(str(e))
+        await asyncio.sleep(e.x)
+        continue
+
+# ---------------- AUDIO ----------------
+elif url_low.endswith((".mp3", ".wav", ".m4a")):
+    try:
+        ext = url_low.split(".")[-1]
+        aud_path = f"{name}.{ext}"
+
+        cmd = [
+            "yt-dlp",
+            "-x",
+            "--audio-format", ext,
+            "-o", aud_path,
+            url2,
+            "-R", "25",
+            "--fragment-retries", "25"
+        ]
+        subprocess.run(cmd, check=True)
+
+        await bot.send_document(
+            chat_id=channel_id,
+            document=aud_path,
+            caption=cc1,
+            **extra
+        )
+
+    try:
+            os.remove(aud_path)
+        except:
+            pass
+
+        count += 1
+
+    except FloodWait as e:
+        await m.reply_text(str(e))
+        await asyncio.sleep(e.x)
+        continue
                             
               elif any(ext in url for ext in [".jpg", ".jpeg", ".png"]):
     try:
