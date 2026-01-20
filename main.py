@@ -765,7 +765,7 @@ async def txt_handler(bot: Client, m: Message):
                 keys_string = " ".join([f"--key {key}" for key in keys])
 
             elif "classplusapp" in url and "m3u8" in url:
-                signed_api =  f"https://covercel.vercel.app/extract_keys?url={url}@bots_updatee&user_id={user_id}"
+                signed_api =  f"https://new-cpapi-temp-489b660e8679.herokuapp.com/ITsBoss?url={url}"
                 response = requests.get(signed_api, timeout=40)
                 url = response.text.strip()
                 url = response.json()['url']
@@ -1213,7 +1213,7 @@ async def text_handler(bot: Client, m: Message):
 
             elif "https://cpvod.testbook.com/" in url or "classplusapp.com/drm/" in url:
                 url = url.replace("https://cpvod.testbook.com/","https://media-cdn.classplusapp.com/drm/")
-                url =  f"https://shefu-api-final.vercel.app/shefu?url={url}@crystalofficial2&user_id={user_id}"
+                url =  f"https://new-cpapi-temp-489b660e8679.herokuapp.com/ITsBoss?url={url}"
                 mpd, keys = helper.get_mps_and_keys(url)
                 url = mpd
                 keys_string = " ".join([f"--key {key}" for key in keys])
