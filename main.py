@@ -837,7 +837,7 @@ if "drive" in url:
             chat_id=channel_id,
             document=ka,
             caption=cc1,
-            message_thread_id=TOPIC_ID   # ✅ YAHI ADD
+            message_thread_id=TOPIC_ID if TOPIC_ID else None
         )
 
         count += 1
