@@ -11,7 +11,7 @@ def _to_int(value, default=0):
 # ─────────── API Configuration ───────────
 API_ID = _to_int(environ.get("API_ID", "21113148"))
 API_HASH = environ.get("API_HASH", "908feafcf7973178ac490b8c35c087d9")
-BOT_TOKEN = environ.get("BOT_TOKEN", "PASTE_YOUR_BOT_TOKEN")
+BOT_TOKEN = environ.get("BOT_TOKEN", "7999635672:AAFZsPzCrdvO1JFxcgbSjoAtnf7D-iMYqBs")
 
 CREDIT = environ.get("CREDIT", "KITTU")
 
@@ -112,3 +112,4 @@ Expected: {format}
 </blockquote>
 """
 }
+
